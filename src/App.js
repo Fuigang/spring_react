@@ -21,22 +21,33 @@ function LoginSignup() {
     setSignup((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 로그인 처리
+  // ✅ 로그인 처리 함수
   const handleLogin = () => {
     axios
-      .post("http://10.5.5.5:8080/auth/login", login)
-      .then(() => {
-        setMsg("✅ 로그인 성공!");
+      .post("http://10.5.5.5:80/auth/login", login, {
+        headers: { "Content-Type": "application/json" }
       })
-      .catch(() => {
-        setMsg("❌ 로그인 실패");
+      .then((resp) => {
+        console.log("서버 응답:", resp.data);
+
+        if (resp.data === true || resp.data === "true") {
+          setMsg("✅ 로그인 성공!");
+        } else {
+          setMsg("❌ 아이디/비밀번호 불일치");
+        }
+      })
+      .catch((err) => {
+        console.error("로그인 요청 에러:", err);
+        setMsg("❌ 서버 오류 (로그인 실패)");
       });
   };
 
-  // 회원가입 처리
+  // ✅ 회원가입 처리 함수
   const handleSignup = () => {
     axios
-      .post("http://10.5.5.5:8080/auth/signup", signup)
+      .post("http://10.5.5.5:80/auth/signup", signup, {
+        headers: { "Content-Type": "application/json" }
+      })
       .then(() => {
         setMsg("✅ 회원가입 성공!");
         setSignupMode(false); // 성공 후 로그인 화면으로 전환

@@ -3,11 +3,66 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./App.css";
 
+const SingnupForm = ({ signup, onChange, onSignup, switchToLogin }) => {
+  return (
+    <>
+      <input
+        type="text"
+        name="id"
+        placeholder="아이디"
+        value={signup.id}
+        onChange={onChange}
+      />
+      <br />
+      <input
+        type="password"
+        name="password"
+        placeholder="비밀번호"
+        value={signup.password}
+        onChange={onChange}
+      />
+      <br />
+      <button onClick={onSignup}>회원가입 완료</button>
+      <button onClick={switchToLogin}>로그인으로</button>
+    </>
+  );
+};
+
+const LoginForm = ({ login, onChange, onLogin, switchToSignup }) => {
+  return (
+    <>
+      <input
+        type="text"
+        name="id"
+        placeholder="아이디"
+        value={login.id}
+        onChange={onChange}
+      />
+      <br />
+      <input
+        type="password"
+        name="password"
+        placeholder="비밀번호"
+        value={login.password}
+        onChange={onChange}
+      />
+      <br />
+      <button onClick={onLogin}>로그인</button>
+      <button onClick={switchToSignup}>회원가입</button>
+      <button onClick={() => axios.get("http://10.5.5.5/auth/test")}>
+        테스트
+      </button>
+    </>
+  );
+};
+
+axios.defaults.withCredentials = true;
+
 // 로그인 + 회원가입 페이지
 function LoginSignup() {
   const [login, setLogin] = useState({ id: "", password: "" });
   const [signup, setSignup] = useState({ id: "", password: "" });
-  const [msg, setMsg] = useState("");
+
   const [signupMode, setSignupMode] = useState(false);
   const navigate = useNavigate();
 
@@ -25,20 +80,13 @@ function LoginSignup() {
   const handleLogin = () => {
     axios
       .post("http://10.5.5.5:80/auth/login", login, {
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       })
       .then((resp) => {
         console.log("서버 응답:", resp.data);
-
-        if (resp.data === true || resp.data === "true") {
-          setMsg("✅ 로그인 성공!");
-        } else {
-          setMsg("❌ 아이디/비밀번호 불일치");
-        }
       })
       .catch((err) => {
         console.error("로그인 요청 에러:", err);
-        setMsg("❌ 서버 오류 (로그인 실패)");
       });
   };
 
@@ -46,15 +94,14 @@ function LoginSignup() {
   const handleSignup = () => {
     axios
       .post("http://10.5.5.5:80/auth/signup", signup, {
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       })
       .then(() => {
-        setMsg("✅ 회원가입 성공!");
         setSignupMode(false); // 성공 후 로그인 화면으로 전환
         navigate("/auth/login");
       })
       .catch(() => {
-        setMsg("❌ 회원가입 실패");
+        console.error("회원가입 요청 에러");
       });
   };
 
@@ -63,59 +110,20 @@ function LoginSignup() {
       <h2>로그인 / 회원가입</h2>
 
       {!signupMode ? (
-        <>
-          {/* 로그인 폼 */}
-          <input
-            type="text"
-            name="id"
-            placeholder="아이디"
-            value={login.id}
-            onChange={handleLoginChange}
-          />
-          <br />
-          <input
-            type="password"
-            name="password"
-            placeholder="비밀번호"
-            value={login.password}
-            onChange={handleLoginChange}
-          />
-          <br />
-          <button onClick={handleLogin}>로그인</button>
-          <button onClick={() => setSignupMode(true)}>회원가입</button>
-        </>
+        <LoginForm
+          login={login}
+          onChange={handleLoginChange}
+          onLogin={handleLogin}
+          switchToSignup={() => setSignupMode(true)}
+        />
       ) : (
-        <>
-          {/* 회원가입 폼 */}
-          <input
-            type="text"
-            name="id"
-            placeholder="아이디"
-            value={signup.id}
-            onChange={handleSignupChange}
-          />
-          <br />
-          <input
-            type="password"
-            name="password"
-            placeholder="비밀번호"
-            value={signup.password}
-            onChange={handleSignupChange}
-          />
-          <br />
-          <button onClick={handleSignup}>회원가입 완료</button>
-          <button
-            onClick={() => {
-              setSignupMode(false);   // ✅ 다시 로그인 화면으로 전환
-              navigate("/auth/login"); // 경로도 로그인으로 이동
-            }}
-          >
-            취소
-          </button>
-        </>
+        <SingnupForm
+          signup={signup}
+          onChange={handleSignupChange}
+          onSignup={handleSignup}
+          switchToLogin={() => setSignupMode(false)}
+        />
       )}
-
-      <p>{msg}</p>
     </div>
   );
 }
@@ -125,7 +133,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* / 와 /auth/login 둘 다 로그인/회원가입 페이지로 연결 */}
         <Route path="/" element={<LoginSignup />} />
         <Route path="/auth/login" element={<LoginSignup />} />
       </Routes>
